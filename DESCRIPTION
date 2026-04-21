@@ -31,7 +31,6 @@ Imports:
     latticeExtra,
     limma,
     methods,
-    RColorBrewer, 
     setRNG,
     stats,
     utils,

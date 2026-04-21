@@ -7,7 +7,7 @@ intgroupColors = function(x)
 {
   
   if (length(x$intgroup)>0) {
-    colors = c(brewer.pal(9, "Set1"), brewer.pal(8, "Dark2"))
+    colors = c(palette.colors(9, "Set 1"), palette.colors(8, "Dark 2"))
     fac  = as.factor(x$pData[[x$intgroup[1]]])
     fac  = maximumLevels(fac, n = length(colors)) ## make sure that factor has at most n levels
     colors = colors[seq_len(nlevels(fac))]

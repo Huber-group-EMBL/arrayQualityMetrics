@@ -30,8 +30,8 @@ aqm.heatmap = function(x, ...)
   maxNrColors = 0  ## the maximum number of sidebar colors used - this value is used below for the layout
   ng = length(x$intgroup)
   if(ng > 0) {
-    palettes = c("Set1", "Set2", "Set3", "Accent", "Dark2", "Paired", "Pastel1", "Pastel2")
-    stopifnot(all(palettes %in% rownames(brewer.pal.info)))
+    palettes = c("Set 1", "Set 2", "Set 3", "Accent", "Dark 2", "Paired", "Pastel 1", "Pastel 2")
+    stopifnot(all(palettes %in% grDevices::palette.pals()))
     palettes = rep(palettes, ceiling(ng/length(palettes))) ## make sure there are enough palettes, recycle if needed
 
     key = rects = vector(mode="list", length=ng)
@@ -39,7 +39,7 @@ aqm.heatmap = function(x, ...)
 
     for(i in seq_len(ng))
       {
-        colors = brewer.pal(brewer.pal.info[palettes[i], "maxcolors"], palettes[i])
+        colors = palette.colors(palette = palettes[i])
         fac  = factor(x$pData[[x$intgroup[i]]])
         fac  = maximumLevels(fac, n = length(colors)) ## make sure that factor has at most n levels
         colors = colors[seq_len(nlevels(fac))]

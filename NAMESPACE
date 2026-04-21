@@ -34,7 +34,7 @@ importFrom(genefilter, dist2)
 
 importFrom(graphics, abline, legend, lines, par, segments, text)
 
-importFrom(grDevices, boxplot.stats, colorRampPalette, pdf, png, rgb)
+importFrom(grDevices, boxplot.stats, colorRampPalette, palette.colors, palette.pals, pdf, png, rgb)
 
 importFrom(grid, gpar, grid.layout, frameGrob, placeGrob, rectGrob, unit)
 
@@ -51,7 +51,6 @@ importFrom(latticeExtra, dendrogramGrob)
 
 importFrom(methods, as, is, new, slot, validObject)
 
-importFrom(RColorBrewer, brewer.pal, brewer.pal.info)
 
 importFrom(setRNG, setRNG)
 
