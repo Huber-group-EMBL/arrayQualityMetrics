@@ -1,6 +1,6 @@
 Package: arrayQualityMetrics
 Title: Quality metrics report for microarray data sets
-Version: 3.69.1
+Version: 3.69.2
 Authors@R: c(
     person("Audrey", "Kauffmann", role = "aut"),
     person("Wolfgang", "Huber", role = "aut"),
