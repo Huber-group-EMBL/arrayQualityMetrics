@@ -2,11 +2,10 @@ prepdata = function(expressionset, intgroup, do.logtransform) {
   conversions = c(`RGList` = "NChannelSet")
   for(i in seq_along(conversions)) {
     if (is(expressionset, names(conversions)[i])) {
-      expressionset = try(as(expressionset, conversions[i]))
-      if(is(expressionset, "try-error")) {
-        stop(sprintf("The argument 'expressionset' is of class '%s', and its automatic conversion into '%s' failed. Please try to convert it manually, or contact the creator of that object.\n", names(conversions)[i], conversions[i]))
+      if(canCoerce(expressionset, conversions[i])) {
+        expressionset = as(expressionset, conversions[i])
       } else {
-        break
+        stop(sprintf("The argument 'expressionset' is of class '%s', and its automatic conversion into '%s' failed. Please try to convert it manually, or contact the creator of that object.\n", names(conversions)[i], conversions[i]))
       }
     }
   }

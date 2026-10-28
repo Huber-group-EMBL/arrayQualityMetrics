@@ -49,7 +49,7 @@ importFrom(lattice, barchart, bwplot, densityplot, draw.key,
 
 importFrom(latticeExtra, dendrogramGrob)
 
-importFrom(methods, as, is, new, slot, validObject)
+importFrom(methods, as, is, new, slot, validObject, canCoerce)
 
 
 importFrom(setRNG, setRNG)
