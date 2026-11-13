@@ -30,7 +30,7 @@ makePlot <- function(x) {
   if (is(x@plot, "trellis")) {
     print(x@plot)
   } else if (is(x@plot, "function")) {
-    do.call(x@plot, args = list())
+    x@plot()
   } else {
     stop(sprintf(
       "Invalid 'x@plot' of class '%s'.",
