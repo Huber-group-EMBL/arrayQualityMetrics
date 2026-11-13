@@ -132,7 +132,11 @@
 renameNodes <- function(doc, path, prefix) {
   ns <- getNodeSet(doc, path, "x")
   if (length(ns) > 0) {
-    oldids <- sapply(ns, function(x) xmlAttrs(x)["id"])
+    oldids <- vapply(
+      ns,
+      function(x) xmlAttrs(x)["id"],
+      FUN.VALUE = character(1)
+    )
     newids <- paste0(prefix, "-", oldids)
     names(newids) <- names(oldids)
 
@@ -152,7 +156,7 @@ renameNodes <- function(doc, path, prefix) {
 ## The first column will contain the rownames of 'x', the second column will be empty
 ##---------------------------------------------------------------------------------------
 annotationTable <- function(x, name) {
-  bgcol <- rep(c("#d0d0ff", "#e0e0f0"), ceiling(ncol(x) / 2))[seq_len(ncol(x))]
+  bgcol <- rep_len(c("#d0d0ff", "#e0e0f0"), ncol(x))
   tab <- paste0(
     "<tr bgcolor='",
     bgcol,

@@ -7,8 +7,7 @@ dircreation <- function(outdir = getwd(), force = FALSE) {
       stop(sprintf("'%s' must be a directory.", outdir))
     }
 
-    outdirContents <- dir(outdir, all.files = TRUE)
-    outdirContents <- setdiff(outdirContents, c(".", ".."))
+    outdirContents <- dir(outdir, all.files = TRUE, no.. = TRUE)
 
     if (!force && length(outdirContents) > 0) {
       stop(sprintf(
@@ -31,7 +30,7 @@ makePlot <- function(x) {
   if (is(x@plot, "trellis")) {
     print(x@plot)
   } else if (is(x@plot, "function")) {
-    do.call(x@plot, args = list())
+    x@plot()
   } else {
     stop(sprintf(
       "Invalid 'x@plot' of class '%s'.",
@@ -110,7 +109,7 @@ makeIndex <- function(p, modules) {
   currentSectionName <- "Something else"
 
   hwrite("<UL>", page = p)
-  for (i in seq_len(length(modules))) {
+  for (i in seq_along(modules)) {
     if (modules[[i]]@section != currentSectionName) {
       if (currentSectionNumber != 1) {
         ## end the previous section
@@ -286,14 +285,11 @@ reportModule <- function(p, module, currentIndex, arrayTable, outdir) {
 ## End the report
 ##----------------------------------------------------------
 makeEnding <- function(p) {
-  z <- sessionInfo("arrayQualityMetrics")
-  version <- z$otherPkgs[[1]]$Version
-  rversion <- sessionInfo()$R.version$version.string
   session <- paste0(
     "This report has been created with arrayQualityMetrics ",
-    version,
+    packageVersion("arrayQualityMetrics"),
     " under ",
-    rversion,
+    R.version.string,
     "."
   )
   hwrite("<hr>", page = p)
@@ -331,12 +327,14 @@ reportTable <- function(p, arrayTable, tableLegend) {
 
   hwrite("<hr>", page = p)
 
-  disp <- ifelse(
+  disp <- if (
     nrow(arrayTable) <=
-      arrayQualityMetricsGlobalParameters$maxNumberOfArraysForShowingArrayMetadataByDefault,
-    "block",
+      arrayQualityMetricsGlobalParameters$maxNumberOfArraysForShowingArrayMetadataByDefault
+  ) {
+    "block"
+  } else {
     "none"
-  )
+  }
   hwrite(
     toggleStart(
       "arraymetadata",
@@ -381,23 +379,6 @@ toggleEnd <- function() {
   "</div>"
 }
 
-##------------------------------------------------------------------
-## Create JSON representation of R character vectors and matrices
-## Names and dimnames attributes are stripped.
-##----------------------------------------------------------
-toJSON_fromchar <- function(x) {
-  paste("[", paste(x, collapse = ", "), "]")
-}
-
-toJSON_fromvector <- function(x) {
-  toJSON_fromchar(paste0('"', as.character(x), '"'))
-}
-
-toJSON_frommatrix <- function(x) {
-  stopifnot(length(dim(x)) == 2)
-  toJSON_fromchar(apply(x, 1, toJSON_fromvector))
-}
-
 ##--------------------------------------------------
 ##   write the report
 ##--------------------------------------------------
@@ -411,13 +392,18 @@ aqm.writereport <- function(modules, arrayTable, reporttitle, outdir) {
   }
 
   ## construct short, unique IDs
-  ids <- sapply(modules, slot, "id")
+  ids <- vapply(modules, slot, "id", FUN.VALUE = character(1))
   stopifnot(!anyNA(ids), !anyDuplicated(modules) > 0)
 
   ## For all report modules, extract the 'svg' slot, then subset only those that are defined.
   svgdata <- lapply(modules, slot, "svg")
   names(svgdata) <- ids
-  hassvg <- !is.na(sapply(svgdata, slot, "numPlotObjects"))
+  hassvg <- !is.na(vapply(
+    svgdata,
+    slot,
+    "numPlotObjects",
+    FUN.VALUE = numeric(1)
+  ))
   svgdata <- svgdata[hassvg]
 
   ## Determine which subset of the modules have computed outliers ('wh'). For each, define
@@ -427,7 +413,12 @@ aqm.writereport <- function(modules, arrayTable, reporttitle, outdir) {
   ## which arrays to highlight initially.
   wh <- which(sapply(modules, function(x) length(x@outliers@statistic) > 0))
 
-  outlierMethodTitles <- sapply(modules, slot, "title")[wh]
+  outlierMethodTitles <- vapply(
+    modules,
+    slot,
+    "title",
+    FUN.VALUE = character(1)
+  )[wh]
   outlierMethodLinks <- paste0("<a href=\"#", ids[wh], "\">")
 
   outlierExplanations <- paste0(
@@ -461,7 +452,7 @@ aqm.writereport <- function(modules, arrayTable, reporttitle, outdir) {
     )
   )
 
-  for (j in seq(along = wh)) {
+  for (j in seq_along(wh)) {
     o <- modules[[wh[j]]]@outliers@which
     stopifnot(!anyNA(o), all((o >= 1) & (o <= numReportObjs)))
     outliers[, j] <- reportObjs %in% o
@@ -515,7 +506,7 @@ aqm.writereport <- function(modules, arrayTable, reporttitle, outdir) {
   currentSectionName <- "Something Else"
   currentIndex <- currentSection <- 1
 
-  for (i in seq(along = modules)) {
+  for (i in seq_along(modules)) {
     if (modules[[i]]@section != currentSectionName) {
       makeSection(p = p, sectionNumber = currentSection, module = modules[[i]])
       currentSection <- currentSection + 1

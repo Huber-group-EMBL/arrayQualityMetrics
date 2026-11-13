@@ -45,7 +45,7 @@ aqm.heatmap <- function(x, ...) {
       "Pastel 2"
     )
     stopifnot(all(palettes %in% grDevices::palette.pals()))
-    palettes <- rep(palettes, ceiling(ng / length(palettes))) ## make sure there are enough palettes, recycle if needed
+    palettes <- rep_len(palettes, ng) ## make sure there are enough palettes, recycle if needed
 
     key <- rects <- vector(mode = "list", length = ng)
     names(rects) <- rep("rect", ng)
@@ -82,7 +82,7 @@ aqm.heatmap <- function(x, ...) {
         nrow = 1,
         ncol = ng,
         heights = unit(1, "null"),
-        widths = unit(rep(1, length = ng), rep("lines", ng)),
+        widths = unit(rep_len(1, ng), "lines"),
         respect = FALSE
       )
       g <- frameGrob(layout = lay)
@@ -101,8 +101,7 @@ aqm.heatmap <- function(x, ...) {
           col = i
         )
       }
-      idem <- function(x) x
-      theLegend <- list(right = list(fun = idem, args = list(x = g)))
+      theLegend <- list(right = list(fun = identity, args = list(x = g)))
     }
   } else {
     thekey <- NULL
