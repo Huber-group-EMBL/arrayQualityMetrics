@@ -327,12 +327,14 @@ reportTable <- function(p, arrayTable, tableLegend) {
 
   hwrite("<hr>", page = p)
 
-  disp <- ifelse(
+  disp <- if (
     nrow(arrayTable) <=
-      arrayQualityMetricsGlobalParameters$maxNumberOfArraysForShowingArrayMetadataByDefault,
-    "block",
+      arrayQualityMetricsGlobalParameters$maxNumberOfArraysForShowingArrayMetadataByDefault
+  ) {
+    "block"
+  } else {
     "none"
-  )
+  }
   hwrite(
     toggleStart(
       "arraymetadata",
