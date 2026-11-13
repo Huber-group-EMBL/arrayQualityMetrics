@@ -132,7 +132,11 @@
 renameNodes <- function(doc, path, prefix) {
   ns <- getNodeSet(doc, path, "x")
   if (length(ns) > 0) {
-    oldids <- sapply(ns, function(x) xmlAttrs(x)["id"])
+    oldids <- vapply(
+      ns,
+      function(x) xmlAttrs(x)["id"],
+      FUN.VALUE = character(1)
+    )
     newids <- paste0(prefix, "-", oldids)
     names(newids) <- names(oldids)
 

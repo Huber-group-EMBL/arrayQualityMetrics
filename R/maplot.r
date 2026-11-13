@@ -69,9 +69,13 @@ aqm.maplot <- function(
     sM <- M
     sA <- A
   }
-  stat <- sapply(seq_len(x$numArrays), function(j) {
-    hoeffd(sA[, j], sM[, j])$D[1, 2]
-  })
+  stat <- vapply(
+    seq_len(x$numArrays),
+    function(j) {
+      hoeffd(sA[, j], sM[, j])$D[1, 2]
+    },
+    FUN.VALUE = numeric(1)
+  )
   attr(stat, "name") <- "<i>D<sub>a</sub></i>"
 
   out <- new(

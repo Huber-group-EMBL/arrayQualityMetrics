@@ -390,13 +390,18 @@ aqm.writereport <- function(modules, arrayTable, reporttitle, outdir) {
   }
 
   ## construct short, unique IDs
-  ids <- sapply(modules, slot, "id")
+  ids <- vapply(modules, slot, "id", FUN.VALUE = character(1))
   stopifnot(!anyNA(ids), !anyDuplicated(modules) > 0)
 
   ## For all report modules, extract the 'svg' slot, then subset only those that are defined.
   svgdata <- lapply(modules, slot, "svg")
   names(svgdata) <- ids
-  hassvg <- !is.na(sapply(svgdata, slot, "numPlotObjects"))
+  hassvg <- !is.na(vapply(
+    svgdata,
+    slot,
+    "numPlotObjects",
+    FUN.VALUE = numeric(1)
+  ))
   svgdata <- svgdata[hassvg]
 
   ## Determine which subset of the modules have computed outliers ('wh'). For each, define
@@ -406,7 +411,12 @@ aqm.writereport <- function(modules, arrayTable, reporttitle, outdir) {
   ## which arrays to highlight initially.
   wh <- which(sapply(modules, function(x) length(x@outliers@statistic) > 0))
 
-  outlierMethodTitles <- sapply(modules, slot, "title")[wh]
+  outlierMethodTitles <- vapply(
+    modules,
+    slot,
+    "title",
+    FUN.VALUE = character(1)
+  )[wh]
   outlierMethodLinks <- paste0("<a href=\"#", ids[wh], "\">")
 
   outlierExplanations <- paste0(
