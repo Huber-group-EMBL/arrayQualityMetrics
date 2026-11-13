@@ -101,8 +101,7 @@ aqm.heatmap <- function(x, ...) {
           col = i
         )
       }
-      idem <- function(x) x
-      theLegend <- list(right = list(fun = idem, args = list(x = g)))
+      theLegend <- list(right = list(fun = identity, args = list(x = g)))
     }
   } else {
     thekey <- NULL

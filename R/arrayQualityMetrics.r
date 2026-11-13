@@ -57,7 +57,7 @@ arrayQualityMetrics <- function(
   )
 
   ## open a 'dummy' graphics device for those functions that need an open one
-  pdf(tempfile())
+  pdf(NULL)
 
   ##---------Generic modules------
   m$heatmap <- aqm.heatmap(x, ...)

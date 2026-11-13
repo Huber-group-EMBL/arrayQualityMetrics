@@ -37,7 +37,7 @@ maximumLevels <- function(f, n) {
     ))
     wipe <- (as.integer(f) > n)
     f[wipe] <- levels(f)[n] <- "other"
-    f <- factor(f) ## remove extra factor levels
+    f <- droplevels(f) ## remove extra factor levels
   }
   return(f)
 }

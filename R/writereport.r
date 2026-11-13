@@ -7,8 +7,7 @@ dircreation <- function(outdir = getwd(), force = FALSE) {
       stop(sprintf("'%s' must be a directory.", outdir))
     }
 
-    outdirContents <- dir(outdir, all.files = TRUE)
-    outdirContents <- setdiff(outdirContents, c(".", ".."))
+    outdirContents <- dir(outdir, all.files = TRUE, no.. = TRUE)
 
     if (!force && length(outdirContents) > 0) {
       stop(sprintf(
