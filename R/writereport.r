@@ -109,7 +109,7 @@ makeIndex <- function(p, modules) {
   currentSectionName <- "Something else"
 
   hwrite("<UL>", page = p)
-  for (i in seq_len(length(modules))) {
+  for (i in seq_along(modules)) {
     if (modules[[i]]@section != currentSectionName) {
       if (currentSectionNumber != 1) {
         ## end the previous section
@@ -450,7 +450,7 @@ aqm.writereport <- function(modules, arrayTable, reporttitle, outdir) {
     )
   )
 
-  for (j in seq(along = wh)) {
+  for (j in seq_along(wh)) {
     o <- modules[[wh[j]]]@outliers@which
     stopifnot(!anyNA(o), all((o >= 1) & (o <= numReportObjs)))
     outliers[, j] <- reportObjs %in% o
@@ -504,7 +504,7 @@ aqm.writereport <- function(modules, arrayTable, reporttitle, outdir) {
   currentSectionName <- "Something Else"
   currentIndex <- currentSection <- 1
 
-  for (i in seq(along = modules)) {
+  for (i in seq_along(modules)) {
     if (modules[[i]]@section != currentSectionName) {
       makeSection(p = p, sectionNumber = currentSection, module = modules[[i]])
       currentSection <- currentSection + 1
