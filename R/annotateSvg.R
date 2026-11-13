@@ -9,27 +9,27 @@
 ## ---------------------------------------------------------------------------------------------------------
 # annotateSvgPlot = function(infile, outfile, outdir, annotationInfo, name)
 #   {
-# 
+#
 #     ## Check argument
 #     stopifnot(is(annotationInfo, "svgParameters"))
-# 
+#
 #     doc = xmlParse(infile)
 #     vb  = getViewBox(doc)
-# 
+#
 #     svg = xmlRoot(doc)
-# 
+#
 #     ## 1. add id
 #     xmlAttrs(svg) = c(id = paste("Fig", name, sep=":"))
-# 
+#
 #     ## monitor our success in finding what we expect
 #     isok = c(symbol = FALSE, clipPath = FALSE, use = FALSE, cp = FALSE, plotobjs = FALSE)
-# 
+#
 #     ## 2. this part is brittle - 'getPlotObjNodes' will be 'getMatplotSeries' or 'getPlotPoints' from
 #     ## 'SVGAnnotation', which rely on conventions used by libcairo to produce the SVG
 #     ## from the R plot, on simple pattern matching and on hope that the found patterns
 #     ## align with the intended plot objects (i.e. not on any explicit identification).
 #     plotobjs = try(annotationInfo@getPlotObjNodes(doc))
-# 
+#
 #     if( (!is(plotobjs, "try-error")) && (length(plotobjs) == annotationInfo@numPlotObjects) )
 #       {
 #          succeeded = 0
@@ -38,7 +38,7 @@
 #             roid = annotationInfo@getReportObjIdFromPlotObjId(i)
 #             stopifnot(length(roid)==1, is.integer(roid))
 #             callbacks = sprintf("plotObjRespond('%s', %d, '%s')", c("click", "show", "hide"), roid, name)
-# 
+#
 #             if(!is(try({
 #                 xmlAttrs(plotobjs[[i]]) = c(
 #                       "class"       = paste0("aqm", roid),
@@ -52,11 +52,11 @@
 #           if (succeeded == length(plotobjs))
 #               isok["plotobjs"] = TRUE
 #       }
-# 
+#
 #     ## 3. find the children of the <defs> element that are <symbol>, and also <clipPath>
 #     isok["symbol"]   = renameNodes(doc, "//x:defs/x:g/x:symbol", prefix = name)
 #     isok["clipPath"] = renameNodes(doc, "//x:clipPath", prefix = name)
-# 
+#
 #     ## similarly, find the <use> elements ...
 #     use = getNodeSet(doc, "//x:use", "x")
 #     if(length(use)>0)
@@ -69,7 +69,7 @@
 #           xmlAttrs(use[[i]]) = newvalues[i]
 #         isok["use"] = TRUE
 #       }
-# 
+#
 #     ## ... and the <g> elements that use a clip-path attribute
 #     cp = getNodeSet(doc, "//x:g[@clip-path]", "x")
 #     if(length(cp)>0)
@@ -81,34 +81,34 @@
 #           xmlAttrs(cp[[i]]) = newvalues[i]
 #         isok["cp"] = TRUE
 #       }
-# 
+#
 #     #saveXML(doc, file.path(outdir, outfile))
 #     writeLines(saveXML(doc), file.path(outdir, outfile)) # get SVG with line breaks
-# 
+#
 #     return(list(size = diff(vb), annotateOK = all(isok[c("symbol", "use", "plotobjs")]))) # clip-path related annotations are not vital
 #   }
-# 
-# 
+#
+#
 # annotateSvgGrid = function(annotationInfo, name) {
 #   ## Check argument
 #   stopifnot(is(annotationInfo, "svgParameters"))
-#   
+#
 #   numPlotObjects = annotationInfo@numPlotObjects
 #   roid = annotationInfo@getReportObjIdFromPlotObjId(seq_len(numPlotObjects))
 #   isok = FALSE
-#   
+#
 #   class     = paste0("aqm", roid)
 #   callbacks = matrix(sprintf("plotObjRespond('%s', %d, '%s')", c("click", "show", "hide"), rep(roid, each=3), name), nrow=numPlotObjects, ncol=3, byrow=TRUE)
-#     
+#
 #   if(annotationInfo@gridObjId == "xyplot.lines"){
 #     # Iterate through line groups
 #     # Note: the code below is based on the assumption that the number of report objects equals
 #     # length(unique(roid)) and objects with same id are distributed among different panels
-#     
+#
 #     numReportObjects = length(unique(roid))
 #     numPanels = numPlotObjects %/% numReportObjects
 #     panelIndices = seq.int(0L, by = numReportObjects, length.out = numPanels)
-#     
+#
 #     for(i in seq_len(numReportObjects))
 #       grid.garnish(paste(annotationInfo@gridObjId, "group", sep=".", i), group=FALSE, grep=TRUE, global=TRUE,
 #                    class       = class[panelIndices+i],
@@ -125,27 +125,25 @@
 #                  onmouseout  = callbacks[,3])
 #     isok = TRUE
 #   }
-#   
+#
 #   return(list(annotateOK = isok))
 # }
 
+renameNodes <- function(doc, path, prefix) {
+  ns <- getNodeSet(doc, path, "x")
+  if (length(ns) > 0) {
+    oldids <- sapply(ns, function(x) xmlAttrs(x)["id"])
+    newids <- paste0(prefix, "-", oldids)
+    names(newids) <- names(oldids)
 
-renameNodes = function(doc, path, prefix)
-  {
-    ns = getNodeSet(doc, path, "x")
-    if(length(ns)>0)
-      {
-        oldids = sapply(ns, function(x) xmlAttrs(x)["id"])
-        newids = paste0(prefix, "-", oldids)
-        names(newids) = names(oldids)
-
-        for(i in seq_along(ns))
-          xmlAttrs(ns[[i]]) = newids[i]
-        TRUE
-      } else {
-        FALSE
-      }
+    for (i in seq_along(ns)) {
+      xmlAttrs(ns[[i]]) <- newids[i]
+    }
+    TRUE
+  } else {
+    FALSE
   }
+}
 
 
 ##--------------------------------------------------------------------------------------
@@ -153,8 +151,21 @@ renameNodes = function(doc, path, prefix)
 ## The function creates a table with 2 columns and as many rows as 'x' has columns.
 ## The first column will contain the rownames of 'x', the second column will be empty
 ##---------------------------------------------------------------------------------------
-annotationTable = function(x, name) {
-  bgcol = rep(c("#d0d0ff", "#e0e0f0"), ceiling(ncol(x)/2))[seq_len(ncol(x))]
-  tab  = paste0("<tr bgcolor='", bgcol, "'><td>", colnames(x), "</td><td style='font-weight:bold'></td></tr>\n", collapse="\n")
-  tab  = paste0("<table id='", paste("Tab", name, sep=":"), "'>", tab, "</table>")
+annotationTable <- function(x, name) {
+  bgcol <- rep(c("#d0d0ff", "#e0e0f0"), ceiling(ncol(x) / 2))[seq_len(ncol(x))]
+  tab <- paste0(
+    "<tr bgcolor='",
+    bgcol,
+    "'><td>",
+    colnames(x),
+    "</td><td style='font-weight:bold'></td></tr>\n",
+    collapse = "\n"
+  )
+  tab <- paste0(
+    "<table id='",
+    paste("Tab", name, sep = ":"),
+    "'>",
+    tab,
+    "</table>"
+  )
 }
