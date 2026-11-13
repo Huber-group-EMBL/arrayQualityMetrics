@@ -1,101 +1,141 @@
 ##---------------------------------------------------------
 ## Create the output directory
 ##---------------------------------------------------------
-dircreation = function(outdir = getwd(), force = FALSE)
-  {
-    if(file.exists(outdir)){
-      if(!file.info(outdir)$isdir)
-        stop(sprintf("'%s' must be a directory.", outdir))
-
-      outdirContents = dir(outdir, all.files = TRUE)
-      outdirContents = setdiff(outdirContents, c(".", ".."))
-
-      if(!force && length(outdirContents)>0)
-        stop(sprintf("The directory '%s' already exists and is not empty. Please remove the directory before calling 'arrayQualityMetrics' or consider using 'force=TRUE'.", outdir))
-      message(sprintf("The report will be written into directory '%s'. ", outdir))
-    } else {
-      dir.create(outdir, recursive=TRUE)
-      message(sprintf("The directory '%s' has been created.", outdir))
+dircreation <- function(outdir = getwd(), force = FALSE) {
+  if (file.exists(outdir)) {
+    if (!file.info(outdir)$isdir) {
+      stop(sprintf("'%s' must be a directory.", outdir))
     }
+
+    outdirContents <- dir(outdir, all.files = TRUE)
+    outdirContents <- setdiff(outdirContents, c(".", ".."))
+
+    if (!force && length(outdirContents) > 0) {
+      stop(sprintf(
+        "The directory '%s' already exists and is not empty. Please remove the directory before calling 'arrayQualityMetrics' or consider using 'force=TRUE'.",
+        outdir
+      ))
+    }
+    message(sprintf("The report will be written into directory '%s'. ", outdir))
+  } else {
+    dir.create(outdir, recursive = TRUE)
+    message(sprintf("The directory '%s' has been created.", outdir))
   }
+}
 
 
 ##---------------------------------------------------------
 ## Produce a plot
 ##---------------------------------------------------------
-makePlot = function(x) {
-  if (is(x@plot, "trellis"))
-    print(x@plot) else
-  if (is(x@plot, "function"))
+makePlot <- function(x) {
+  if (is(x@plot, "trellis")) {
+    print(x@plot)
+  } else if (is(x@plot, "function")) {
     do.call(x@plot, args = list())
-  else stop(sprintf("Invalid 'x@plot' of class '%s'.", paste(class(x@plot), collapse=", ")))
+  } else {
+    stop(sprintf(
+      "Invalid 'x@plot' of class '%s'.",
+      paste(class(x@plot), collapse = ", ")
+    ))
+  }
 }
 
 ##---------------------------------------------------------
 ## Create the title
 ##---------------------------------------------------------
-makeTitle = function(reporttitle, outdir, params)
-  {
-    if(!(is.character(reporttitle)&&(length(reporttitle)==1)))
-      stop("'reporttitle' must be a character of length 1.")
-
-    ## ------- copy and link the CSS and JavaScript files
-    filenames = c("arrayQualityMetrics.css", "arrayQualityMetrics.js")
-    filelocs  = system.file("javascript", filenames, package = "arrayQualityMetrics")
-    filelocs[ filelocs!="" ]
-    if(length(filelocs)<length(filenames))
-        stop(sprintf("Could not find all of: '%s'.", paste(filenames, collapse=", ")))
-
-    copySubstitute(src = filelocs, dest = outdir, recursive = TRUE, symbolValues = params)
-
-    p = openPage(filename = file.path(outdir, 'index.html'),
-      link.javascript = filenames[2],
-      link.css        = filenames[1],
-      body.attributes = list("onload" = "reportinit()"),
-      title           = reporttitle)
-
-    hwrite("<hr>", page = p)
-    hwrite(reporttitle, page = p, heading=1)
-    hwrite("<hr>", page = p)
-    return(p)
+makeTitle <- function(reporttitle, outdir, params) {
+  if (!(is.character(reporttitle) && (length(reporttitle) == 1))) {
+    stop("'reporttitle' must be a character of length 1.")
   }
+
+  ## ------- copy and link the CSS and JavaScript files
+  filenames <- c("arrayQualityMetrics.css", "arrayQualityMetrics.js")
+  filelocs <- system.file(
+    "javascript",
+    filenames,
+    package = "arrayQualityMetrics"
+  )
+  filelocs[filelocs != ""]
+  if (length(filelocs) < length(filenames)) {
+    stop(sprintf(
+      "Could not find all of: '%s'.",
+      paste(filenames, collapse = ", ")
+    ))
+  }
+
+  copySubstitute(
+    src = filelocs,
+    dest = outdir,
+    recursive = TRUE,
+    symbolValues = params
+  )
+
+  p <- openPage(
+    filename = file.path(outdir, 'index.html'),
+    link.javascript = filenames[2],
+    link.css = filenames[1],
+    body.attributes = list("onload" = "reportinit()"),
+    title = reporttitle
+  )
+
+  hwrite("<hr>", page = p)
+  hwrite(reporttitle, page = p, heading = 1)
+  hwrite("<hr>", page = p)
+  return(p)
+}
 
 
 ##---------------------------------------------------------
 ## Create a new section
 ##---------------------------------------------------------
-makeSection = function(p, sectionNumber, module)
-{
+makeSection <- function(p, sectionNumber, module) {
   hwrite("<hr>", page = p)
-  sec = paste0("<a name= 'S", sectionNumber,"'>Section ", sectionNumber, ": ",
-    module@section,"</a>")
-  hwrite(sec, page = p, heading=2)
+  sec <- paste0(
+    "<a name= 'S",
+    sectionNumber,
+    "'>Section ",
+    sectionNumber,
+    ": ",
+    module@section,
+    "</a>"
+  )
+  hwrite(sec, page = p, heading = 2)
 }
 
 ##---------------------------------------------------------
 ## Create the index
 ##---------------------------------------------------------
-makeIndex = function(p, modules)
-{
-  currentSectionNumber = 1
-  currentSectionName   = "Something else"
+makeIndex <- function(p, modules) {
+  currentSectionNumber <- 1
+  currentSectionName <- "Something else"
 
   hwrite("<UL>", page = p)
-  for(i in seq_len(length(modules)))
-    {
-      if(modules[[i]]@section != currentSectionName)
-        {
-          if(currentSectionNumber != 1) ## end the previous section
-            hwrite("</UL>", page = p)
+  for (i in seq_len(length(modules))) {
+    if (modules[[i]]@section != currentSectionName) {
+      if (currentSectionNumber != 1) {
+        ## end the previous section
+        hwrite("</UL>", page = p)
+      }
 
-          hwrite(paste0("<br><li class='tocsection'>Section ", currentSectionNumber,": ",
-                       modules[[i]]@section, "</li><UL>"), page = p,
-                 link = paste0("#S", currentSectionNumber))
-          currentSectionNumber = currentSectionNumber+1
-        }
-      hwrite(paste0("<li class='tocmodule'>", modules[[i]]@title, "</li>"), page = p)
-      currentSectionName = modules[[i]]@section
+      hwrite(
+        paste0(
+          "<br><li class='tocsection'>Section ",
+          currentSectionNumber,
+          ": ",
+          modules[[i]]@section,
+          "</li><UL>"
+        ),
+        page = p,
+        link = paste0("#S", currentSectionNumber)
+      )
+      currentSectionNumber <- currentSectionNumber + 1
     }
+    hwrite(
+      paste0("<li class='tocmodule'>", modules[[i]]@title, "</li>"),
+      page = p
+    )
+    currentSectionName <- modules[[i]]@section
+  }
   hwrite("</UL></UL>", page = p)
 
   ## introductoryNote(p)
@@ -104,148 +144,217 @@ makeIndex = function(p, modules)
 ##---------------------------------------------------------
 ## Create a module  of the report with figures and legend
 ##---------------------------------------------------------
-reportModule = function(p, module, currentIndex, arrayTable, outdir)
-{
-    stopifnot(is(module, "aqmReportModule"))
-    validObject(module, test=FALSE)
+reportModule <- function(p, module, currentIndex, arrayTable, outdir) {
+  stopifnot(is(module, "aqmReportModule"))
+  validObject(module, test = FALSE)
 
-    svgwarn = FALSE
+  svgwarn <- FALSE
 
-    stopifnot(!is.na(module@title))
-    name = module@id
+  stopifnot(!is.na(module@title))
+  name <- module@id
 
-    stopifnot(!any(is.na(module@size)))
-    h = module@size["h"]
-    w = module@size["w"]
+  stopifnot(!any(is.na(module@size)))
+  h <- module@size["h"]
+  w <- module@size["w"]
 
-    stopifnot(length(currentIndex)==1, is.numeric(currentIndex), !is.na(currentIndex))
-    dpi = arrayQualityMetricsGlobalParameters$dpi
+  stopifnot(
+    length(currentIndex) == 1,
+    is.numeric(currentIndex),
+    !is.na(currentIndex)
+  )
+  dpi <- arrayQualityMetricsGlobalParameters$dpi
 
-    if(is.na(module@svg@numPlotObjects)) {
-      ## no svg - use png
-      nameimg = paste0(name, ".png")
-        
-      png(filename = file.path(outdir, nameimg), height= h*dpi, width = w*dpi)
-      makePlot(module)
-      grDevices::dev.off()
-      img = hmakeTag("img", src = nameimg, border = 0,
-                       alt = nameimg, id = paste("Fig", name, sep="ls:"))
-    } else {
-      ## svg
-      nameimg = paste0(name, ".svg")
-      if (is(module@plot, "trellis")) {
-        ## Render grid graphics using gridsvg; the below eval/substitute looks clunky but seems needed to avoid problems with
-        ## the argument evaluation acrobatics happening in 'gridsvg', and with lazy evaluation
-        theName = file.path(outdir, nameimg)
-        thePrefix = paste("Fig", name, sep=":")
-        eval(substitute(gridsvg(name = theName, width = w, height = h, res = dpi, prefix = thePrefix, usePaths = "none")))
-        makePlot(module)
-        #annRes = annotateSvgGrid(annotationInfo = module@svg, name = name) ## this eventually calls 'grid.garnish'
-        gridSVG::dev.off()          
-      } else {
-        ## annotate plain R graphics using XML  
-        #svgtemp = paste0(tempfile(), ".svg")
-        svgout = file.path(outdir, nameimg)
-        #Cairo(file = svgout, type = "svg", height = h, width = w, units = "in", dpi = dpi)
-        svglite(file = svgout, height = h, width = w)
-        makePlot(module)
-        grDevices::dev.off() ## close file, then process it with 'annotateSvgPlot'
-    #    annRes = annotateSvgPlot(infile = svgtemp, outfile = nameimg, outdir = outdir, annotationInfo = module@svg, name = name)
-      }
-        
-      # if(!annRes$annotateOK)
-      #     svgwarn = paste("Note: the figure is static - enhancement with interactive effects failed.",
-      #       "This is either due to a version incompatibility of the 'SVGAnnotation' R package and your",
-      #       "version of 'Cairo' or 'libcairo', or due to plot misformating. Please consult the Bioconductor forum, or",
-      #       "contact the maintainer of 'arrayQualityMetrics' with a reproducible example to help fix this problem.")
+  if (is.na(module@svg@numPlotObjects)) {
+    ## no svg - use png
+    nameimg <- paste0(name, ".png")
 
-      ## TO DO:
-      ##  sizes = paste(round(annRes$size))
-      ##  hwrite(c(aqm.hwriteImage(nameimg, width=sizes[1], height=sizes[2], id=paste("Fig", name, sep=":")),
-      ##               annotationTable(arrayTable, name = name)))
-      img = hwrite( c( paste(readLines(file.path(outdir, nameimg), warn=FALSE), collapse="\n"),
-                         annotationTable(arrayTable, name = name) ))
-    }
-    
-    ## Also make a PDF file
-    namepdf = paste0(name, ".pdf")
-    pdf(file = file.path(outdir, namepdf), height = h, width = w)
+    png(
+      filename = file.path(outdir, nameimg),
+      height = h * dpi,
+      width = w * dpi
+    )
     makePlot(module)
     grDevices::dev.off()
-
-    ## Write the HTML
-    hwrite("\n\n", page = p)
-    hwrite(toggleStart(name, display=module@defaultdisplay, text = sprintf("Figure %d: %s.", currentIndex, module@title)), page = p)
-
-    hwrite(img, page = p)
-    hwrite("<br>\n", page = p)
-
-    hwrite(gsub("The figure <!-- FIG -->",
-           paste0("<b>Figure ", currentIndex, "</b>", if(!is.na(namepdf)) hwrite(" (PDF file)", link = namepdf)),
-                 module@legend, ignore.case = TRUE), page = p)
-    hwrite("<br><br><br>\n", page = p)
-
-    if(!identical(svgwarn, FALSE))
-       hwrite(svgwarn, page = p)
-
-    hwrite(toggleEnd(), page = p)
-
-    ## Recursion, for the barplot with the outliers
-    if(!identical(NA_character_, module@outliers@description)) {
-      currentIndex = currentIndex + 1
-      reportModule(p, aqm.outliers(module), currentIndex, arrayTable, outdir)
+    img <- hmakeTag(
+      "img",
+      src = nameimg,
+      border = 0,
+      alt = nameimg,
+      id = paste("Fig", name, sep = "ls:")
+    )
+  } else {
+    ## svg
+    nameimg <- paste0(name, ".svg")
+    if (is(module@plot, "trellis")) {
+      ## Render grid graphics using gridsvg; the below eval/substitute looks clunky but seems needed to avoid problems with
+      ## the argument evaluation acrobatics happening in 'gridsvg', and with lazy evaluation
+      theName <- file.path(outdir, nameimg)
+      thePrefix <- paste("Fig", name, sep = ":")
+      eval(substitute(gridsvg(
+        name = theName,
+        width = w,
+        height = h,
+        res = dpi,
+        prefix = thePrefix,
+        usePaths = "none"
+      )))
+      makePlot(module)
+      #annRes = annotateSvgGrid(annotationInfo = module@svg, name = name) ## this eventually calls 'grid.garnish'
+      gridSVG::dev.off()
+    } else {
+      ## annotate plain R graphics using XML
+      #svgtemp = paste0(tempfile(), ".svg")
+      svgout <- file.path(outdir, nameimg)
+      #Cairo(file = svgout, type = "svg", height = h, width = w, units = "in", dpi = dpi)
+      svglite(file = svgout, height = h, width = w)
+      makePlot(module)
+      grDevices::dev.off() ## close file, then process it with 'annotateSvgPlot'
+      #    annRes = annotateSvgPlot(infile = svgtemp, outfile = nameimg, outdir = outdir, annotationInfo = module@svg, name = name)
     }
 
-    return(currentIndex + 1)
+    # if(!annRes$annotateOK)
+    #     svgwarn = paste("Note: the figure is static - enhancement with interactive effects failed.",
+    #       "This is either due to a version incompatibility of the 'SVGAnnotation' R package and your",
+    #       "version of 'Cairo' or 'libcairo', or due to plot misformating. Please consult the Bioconductor forum, or",
+    #       "contact the maintainer of 'arrayQualityMetrics' with a reproducible example to help fix this problem.")
+
+    ## TO DO:
+    ##  sizes = paste(round(annRes$size))
+    ##  hwrite(c(aqm.hwriteImage(nameimg, width=sizes[1], height=sizes[2], id=paste("Fig", name, sep=":")),
+    ##               annotationTable(arrayTable, name = name)))
+    img <- hwrite(c(
+      paste(
+        readLines(file.path(outdir, nameimg), warn = FALSE),
+        collapse = "\n"
+      ),
+      annotationTable(arrayTable, name = name)
+    ))
   }
+
+  ## Also make a PDF file
+  namepdf <- paste0(name, ".pdf")
+  pdf(file = file.path(outdir, namepdf), height = h, width = w)
+  makePlot(module)
+  grDevices::dev.off()
+
+  ## Write the HTML
+  hwrite("\n\n", page = p)
+  hwrite(
+    toggleStart(
+      name,
+      display = module@defaultdisplay,
+      text = sprintf("Figure %d: %s.", currentIndex, module@title)
+    ),
+    page = p
+  )
+
+  hwrite(img, page = p)
+  hwrite("<br>\n", page = p)
+
+  hwrite(
+    gsub(
+      "The figure <!-- FIG -->",
+      paste0(
+        "<b>Figure ",
+        currentIndex,
+        "</b>",
+        if (!is.na(namepdf)) hwrite(" (PDF file)", link = namepdf)
+      ),
+      module@legend,
+      ignore.case = TRUE
+    ),
+    page = p
+  )
+  hwrite("<br><br><br>\n", page = p)
+
+  if (!identical(svgwarn, FALSE)) {
+    hwrite(svgwarn, page = p)
+  }
+
+  hwrite(toggleEnd(), page = p)
+
+  ## Recursion, for the barplot with the outliers
+  if (!identical(NA_character_, module@outliers@description)) {
+    currentIndex <- currentIndex + 1
+    reportModule(p, aqm.outliers(module), currentIndex, arrayTable, outdir)
+  }
+
+  return(currentIndex + 1)
+}
 
 ##----------------------------------------------------------
 ## End the report
 ##----------------------------------------------------------
-makeEnding = function(p)
-  {
-    z = sessionInfo("arrayQualityMetrics")
-    version = z$otherPkgs[[1]]$Version
-    rversion = sessionInfo()$R.version$version.string
-    session = paste0("This report has been created with arrayQualityMetrics ",
-      version, " under ", rversion, ".")
-    hwrite("<hr>", page = p)
-    hwrite(session, page = p, style ='font-size:9pt')
-    hwrite("<hr>", page = p)
-    closePage(page = p)
-  }
+makeEnding <- function(p) {
+  z <- sessionInfo("arrayQualityMetrics")
+  version <- z$otherPkgs[[1]]$Version
+  rversion <- sessionInfo()$R.version$version.string
+  session <- paste0(
+    "This report has been created with arrayQualityMetrics ",
+    version,
+    " under ",
+    rversion,
+    "."
+  )
+  hwrite("<hr>", page = p)
+  hwrite(session, page = p, style = 'font-size:9pt')
+  hwrite("<hr>", page = p)
+  closePage(page = p)
+}
 
 ##----------------------------------------------------------
 ## Introductory Note
 ##----------------------------------------------------------
-introductoryNote = function(p)
-  {
-    txt = paste0("<h3>Browser compatibility</h3>\n",
-      "This report uses recent features of HTML 5. Functionality has been tested on these browsers: ",
-      "Firefox 10, Chrome 17, Safari 5.1.2\n")
-    hwrite("<hr>\n", page = p)
-    hwrite(txt, page = p)
-  }
+introductoryNote <- function(p) {
+  txt <- paste0(
+    "<h3>Browser compatibility</h3>\n",
+    "This report uses recent features of HTML 5. Functionality has been tested on these browsers: ",
+    "Firefox 10, Chrome 17, Safari 5.1.2\n"
+  )
+  hwrite("<hr>\n", page = p)
+  hwrite(txt, page = p)
+}
 
 ##----------------------------------------------------------
 ##   write the HTML for 'arrayTable', including checkboxes
 ##----------------------------------------------------------
-reportTable = function(p, arrayTable, tableLegend)
-{
-  s = seq_len(nrow(arrayTable))
-  arrayTable = cbind(
-    " " = sprintf("<input type='checkbox' name='ReportObjectCheckBoxes' value='' onchange='checkboxEvent(%d)'>", s),
+reportTable <- function(p, arrayTable, tableLegend) {
+  s <- seq_len(nrow(arrayTable))
+  arrayTable <- cbind(
+    " " = sprintf(
+      "<input type='checkbox' name='ReportObjectCheckBoxes' value='' onchange='checkboxEvent(%d)'>",
+      s
+    ),
     arrayTable,
-    stringsAsFactors = FALSE)
+    stringsAsFactors = FALSE
+  )
 
   hwrite("<hr>", page = p)
 
-  disp = ifelse(nrow(arrayTable)<=arrayQualityMetricsGlobalParameters$maxNumberOfArraysForShowingArrayMetadataByDefault , "block", "none")
-  hwrite(toggleStart("arraymetadata", disp, "Array metadata and outlier detection overview"), page = p)
-  hwrite(arrayTable, page = p,
-         row.bgcolor = rep(list("#ffffff", c("#d0d0ff", "#e0e0f0")), ceiling(nrow(arrayTable)/2)),
-         table.style = "margin-left:auto;text-align:right;",
-         row.style = list("font-weight:bold"))
+  disp <- ifelse(
+    nrow(arrayTable) <=
+      arrayQualityMetricsGlobalParameters$maxNumberOfArraysForShowingArrayMetadataByDefault,
+    "block",
+    "none"
+  )
+  hwrite(
+    toggleStart(
+      "arraymetadata",
+      disp,
+      "Array metadata and outlier detection overview"
+    ),
+    page = p
+  )
+  hwrite(
+    arrayTable,
+    page = p,
+    row.bgcolor = rep(
+      list("#ffffff", c("#d0d0ff", "#e0e0f0")),
+      ceiling(nrow(arrayTable) / 2)
+    ),
+    table.style = "margin-left:auto;text-align:right;",
+    row.style = list("font-weight:bold")
+  )
 
   hwrite(paste0("<br>", tableLegend, "<br>", toggleEnd()), page = p)
 }
@@ -253,138 +362,179 @@ reportTable = function(p, arrayTable, tableLegend)
 ##------------------------------------------------------------------
 ## Display toggle start and end
 ##----------------------------------------------------------
-toggleStart = function(name, display, text)
+toggleStart <- function(name, display, text) {
   paste(
-    sprintf("<a name=\"%s\" id=\"%s-h\" href=\"javascript: toggle('%s')\" style=\"text-decoration:none;font-weight:bold;font-size:larger\">%s %s</a><br>\n",
-                      name,      name,                            name,                                  c("block"="-", "none"="+")[display], text),
-    sprintf("<div id=\"%s-b\" style=\"display:%s\">\n",
-                      name,                 display), sep="\n")
+    sprintf(
+      "<a name=\"%s\" id=\"%s-h\" href=\"javascript: toggle('%s')\" style=\"text-decoration:none;font-weight:bold;font-size:larger\">%s %s</a><br>\n",
+      name,
+      name,
+      name,
+      c("block" = "-", "none" = "+")[display],
+      text
+    ),
+    sprintf("<div id=\"%s-b\" style=\"display:%s\">\n", name, display),
+    sep = "\n"
+  )
+}
 
-toggleEnd = function()
+toggleEnd <- function() {
   "</div>"
+}
 
 ##------------------------------------------------------------------
 ## Create JSON representation of R character vectors and matrices
 ## Names and dimnames attributes are stripped.
 ##----------------------------------------------------------
-toJSON_fromchar = function(x)
-  paste("[", paste(x, collapse=", "), "]")
+toJSON_fromchar <- function(x) {
+  paste("[", paste(x, collapse = ", "), "]")
+}
 
-toJSON_fromvector = function(x)
-    toJSON_fromchar(paste0('"', as.character(x), '"'))
+toJSON_fromvector <- function(x) {
+  toJSON_fromchar(paste0('"', as.character(x), '"'))
+}
 
-toJSON_frommatrix = function(x)
-  {
-    stopifnot(length(dim(x))==2)
-    toJSON_fromchar(apply(x, 1, toJSON_fromvector))
-  }
+toJSON_frommatrix <- function(x) {
+  stopifnot(length(dim(x)) == 2)
+  toJSON_fromchar(apply(x, 1, toJSON_fromvector))
+}
 
 ##--------------------------------------------------
 ##   write the report
 ##--------------------------------------------------
-aqm.writereport = function(modules, arrayTable, reporttitle, outdir)
-{
-  numReportObjs = nrow(arrayTable)
-  reportObjs    = seq_len(numReportObjs)
+aqm.writereport <- function(modules, arrayTable, reporttitle, outdir) {
+  numReportObjs <- nrow(arrayTable)
+  reportObjs <- seq_len(numReportObjs)
 
   ## To avoid dealing with this pathologic special case downstream in the HTML
-  if(numReportObjs==0)
+  if (numReportObjs == 0) {
     stop("'arrayTable' must not be empty.")
+  }
 
   ## construct short, unique IDs
-  ids = sapply(modules, slot, "id")
+  ids <- sapply(modules, slot, "id")
   stopifnot(!any(is.na(ids)), !any(duplicated(modules)))
 
   ## For all report modules, extract the 'svg' slot, then subset only those that are defined.
-  svgdata = lapply(modules, slot, "svg")
-  names(svgdata) = ids
-  hassvg  = !is.na(sapply(svgdata, slot, "numPlotObjects"))
-  svgdata = svgdata[ hassvg]
+  svgdata <- lapply(modules, slot, "svg")
+  names(svgdata) <- ids
+  hassvg <- !is.na(sapply(svgdata, slot, "numPlotObjects"))
+  svgdata <- svgdata[hassvg]
 
   ## Determine which subset of the modules have computed outliers ('wh'). For each, define
   ## a corresponding column in the logical matrix 'outliers'.
   ## Further below, a textual representation of 'outliers', ifelse(outliers, "x", "") is added to arrayTable,
   ## and the row-wise OR (more precisely: 'apply(outliers, 1, any)') is used to determine
   ## which arrays to highlight initially.
-  wh = which(sapply(modules, function(x) length(x@outliers@statistic)>0))
+  wh <- which(sapply(modules, function(x) length(x@outliers@statistic) > 0))
 
-  outlierMethodTitles = sapply(modules, slot, "title")[wh]
-  outlierMethodLinks  = paste0("<a href=\"#", ids[wh], "\">")
+  outlierMethodTitles <- sapply(modules, slot, "title")[wh]
+  outlierMethodLinks <- paste0("<a href=\"#", ids[wh], "\">")
 
-  outlierExplanations = paste0(
+  outlierExplanations <- paste0(
     "The columns named *1, *2, ... indicate the calls from the different outlier detection methods:<OL>",
-    paste(sprintf("<LI> outlier detection by %s%s</a></LI>",
-                       outlierMethodLinks, outlierMethodTitles), collapse = ""),
+    paste(
+      sprintf(
+        "<LI> outlier detection by %s%s</a></LI>",
+        outlierMethodLinks,
+        outlierMethodTitles
+      ),
+      collapse = ""
+    ),
     "</OL>The outlier detection criteria are explained below in the respective sections. Arrays that were called outliers ",
     "by at least one criterion are marked by checkbox selection in this table, and are ",
     "indicated by highlighted lines or points in some of the plots below. ",
     "By clicking the checkboxes in the table, or on the corresponding points/lines in the plots, you can modify the selection. ",
-    "To reset the selection, reload the HTML page in your browser.", "<br><br>",
+    "To reset the selection, reload the HTML page in your browser.",
+    "<br><br>",
     "At the scope covered by this software, outlier detection is a poorly defined question, and there is no 'right' or 'wrong' answer. ",
     "These are hints which are intended to be followed up manually. If you want to automate outlier detection, you need to limit the scope ",
-    "to a particular platform and experimental design, and then choose and calibrate the metrics used.")
+    "to a particular platform and experimental design, and then choose and calibrate the metrics used."
+  )
 
-  outliers = matrix(NA, nrow = numReportObjs,
-                        ncol = length(wh),
-                        dimnames = list(NULL, sprintf("%s*%d</a>", outlierMethodLinks, seq_along(wh))))
+  outliers <- matrix(
+    NA,
+    nrow = numReportObjs,
+    ncol = length(wh),
+    dimnames = list(
+      NULL,
+      sprintf("%s*%d</a>", outlierMethodLinks, seq_along(wh))
+    )
+  )
 
-  for(j in seq(along = wh))
-    {
-      o = modules[[wh[j]]]@outliers@which
-      stopifnot(!any(is.na(o)), all( (o>=1) & (o<=numReportObjs)))
-      outliers[,j] = reportObjs %in% o
-    }
-
+  for (j in seq(along = wh)) {
+    o <- modules[[wh[j]]]@outliers@which
+    stopifnot(!any(is.na(o)), all((o >= 1) & (o <= numReportObjs)))
+    outliers[, j] <- reportObjs %in% o
+  }
 
   ## Add numeric indices, rownames and outlier annotation to 'arrayTable'
   ## Make two versions of it:
   ## - 'big', includes outlier status, is shown at the top of the report
   ## - 'compact' , without outlier status, is shown next to the interactive plots
-  rowchar = as.character(row.names(arrayTable))
-  rownum  = paste(reportObjs)
-  left = if(!identical(rowchar, rownum))
-    data.frame(array = rownum, sampleNames = rowchar, stringsAsFactors = FALSE) else
+  rowchar <- as.character(row.names(arrayTable))
+  rownum <- paste(reportObjs)
+  left <- if (!identical(rowchar, rownum)) {
+    data.frame(array = rownum, sampleNames = rowchar, stringsAsFactors = FALSE)
+  } else {
     data.frame(array = rownum, stringsAsFactors = FALSE)
+  }
 
-  arrayTableBig     = cbind(left, ifelse(outliers, "x", ""), arrayTable, stringsAsFactors = FALSE)
-  arrayTableCompact = cbind(left, arrayTable, stringsAsFactors = FALSE)
-  rownames(arrayTableBig) = rownames(arrayTableCompact) = NULL
+  arrayTableBig <- cbind(
+    left,
+    ifelse(outliers, "x", ""),
+    arrayTable,
+    stringsAsFactors = FALSE
+  )
+  arrayTableCompact <- cbind(left, arrayTable, stringsAsFactors = FALSE)
+  rownames(arrayTableBig) <- rownames(arrayTableCompact) <- NULL
 
   ## Open and set up the HTML page
-  p = makeTitle(
+  p <- makeTitle(
     reporttitle = reporttitle,
     outdir = outdir,
     ## Inject report-specific variables into the JavaScript
     params = c(
-      HIGHLIGHTINITIAL = jsonlite::toJSON(tolower(as.character(apply(outliers, 1, any)))),
-      ARRAYMETADATA    = jsonlite::toJSON(arrayTableCompact),
-      SVGOBJECTNAMES   = jsonlite::toJSON(names(svgdata)),
-      REPORTOBJSTYLES  = paste0(".aqm", reportObjs, " { }", collapse = "\n")
-    ))
+      HIGHLIGHTINITIAL = jsonlite::toJSON(tolower(as.character(apply(
+        outliers,
+        1,
+        any
+      )))),
+      ARRAYMETADATA = jsonlite::toJSON(arrayTableCompact),
+      SVGOBJECTNAMES = jsonlite::toJSON(names(svgdata)),
+      REPORTOBJSTYLES = paste0(".aqm", reportObjs, " { }", collapse = "\n")
+    )
+  )
 
   makeIndex(p = p, modules = modules)
-  reportTable(p = p, arrayTable = arrayTableBig,
-              tableLegend = outlierExplanations)
+  reportTable(
+    p = p,
+    arrayTable = arrayTableBig,
+    tableLegend = outlierExplanations
+  )
 
-  currentSectionName = "Something Else"
-  currentIndex = currentSection = 1
+  currentSectionName <- "Something Else"
+  currentIndex <- currentSection <- 1
 
-  for(i in seq(along = modules))
-    {
-      if(modules[[i]]@section != currentSectionName)
-        {
-          makeSection(p = p, sectionNumber = currentSection, module = modules[[i]])
-          currentSection = currentSection+1
-        }
-      currentIndex = reportModule(
-        p = p,
-        module = modules[[i]],
-        currentIndex = currentIndex,
-        arrayTable = arrayTableCompact,
-        outdir=outdir)
-      currentSectionName = modules[[i]]@section
+  for (i in seq(along = modules)) {
+    if (modules[[i]]@section != currentSectionName) {
+      makeSection(p = p, sectionNumber = currentSection, module = modules[[i]])
+      currentSection <- currentSection + 1
     }
+    currentIndex <- reportModule(
+      p = p,
+      module = modules[[i]],
+      currentIndex = currentIndex,
+      arrayTable = arrayTableCompact,
+      outdir = outdir
+    )
+    currentSectionName <- modules[[i]]@section
+  }
 
   makeEnding(p)
-  invisible(list(modules=modules, arrayTable=arrayTableBig, reporttitle=reporttitle, outdir=outdir))
+  invisible(list(
+    modules = modules,
+    arrayTable = arrayTableBig,
+    reporttitle = reporttitle,
+    outdir = outdir
+  ))
 }

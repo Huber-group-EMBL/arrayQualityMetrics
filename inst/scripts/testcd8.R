@@ -4,14 +4,17 @@
 ##
 
 library("arrayQualityMetrics")
-options(error=recover)
+options(error = recover)
 
-if(!file.exists("cd8.Rdata")) 
-  download.file("http://dl.dropbox.com/u/1225281/cd8.RData",
-                  destfile="cd8.Rdata")
+if (!file.exists("cd8.Rdata")) {
+  download.file(
+    "http://dl.dropbox.com/u/1225281/cd8.RData",
+    destfile = "cd8.Rdata"
+  )
+}
 
-if(!exists("cd8"))
+if (!exists("cd8")) {
   load("cd8.Rdata")
+}
 
-arrayQualityMetrics(cd8, force=TRUE, do.logtransform=TRUE)
-
+arrayQualityMetrics(cd8, force = TRUE, do.logtransform = TRUE)
