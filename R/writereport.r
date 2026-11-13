@@ -286,14 +286,11 @@ reportModule <- function(p, module, currentIndex, arrayTable, outdir) {
 ## End the report
 ##----------------------------------------------------------
 makeEnding <- function(p) {
-  z <- sessionInfo("arrayQualityMetrics")
-  version <- z$otherPkgs[[1]]$Version
-  rversion <- sessionInfo()$R.version$version.string
   session <- paste0(
     "This report has been created with arrayQualityMetrics ",
-    version,
+    packageVersion("arrayQualityMetrics"),
     " under ",
-    rversion,
+    R.version.string,
     "."
   )
   hwrite("<hr>", page = p)
