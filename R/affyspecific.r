@@ -12,7 +12,7 @@ prepaffy <- function(expressionset, x) {
   x$dataPLM <- fitPLM(expressionset)
   x$pm <- pm(expressionset)
   x$mm <- mm(expressionset)
-  x$mmOK <- !any(is.na(x$mm))
+  x$mmOK <- !anyNA(x$mm)
   return(x)
 }
 
