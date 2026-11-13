@@ -153,7 +153,7 @@ reportModule <- function(p, module, currentIndex, arrayTable, outdir) {
   stopifnot(!is.na(module@title))
   name <- module@id
 
-  stopifnot(!any(is.na(module@size)))
+  stopifnot(!anyNA(module@size))
   h <- module@size["h"]
   w <- module@size["w"]
 
@@ -412,7 +412,7 @@ aqm.writereport <- function(modules, arrayTable, reporttitle, outdir) {
 
   ## construct short, unique IDs
   ids <- sapply(modules, slot, "id")
-  stopifnot(!any(is.na(ids)), !any(duplicated(modules)))
+  stopifnot(!anyNA(ids), !anyDuplicated(modules) > 0)
 
   ## For all report modules, extract the 'svg' slot, then subset only those that are defined.
   svgdata <- lapply(modules, slot, "svg")
@@ -463,7 +463,7 @@ aqm.writereport <- function(modules, arrayTable, reporttitle, outdir) {
 
   for (j in seq(along = wh)) {
     o <- modules[[wh[j]]]@outliers@which
-    stopifnot(!any(is.na(o)), all((o >= 1) & (o <= numReportObjs)))
+    stopifnot(!anyNA(o), all((o >= 1) & (o <= numReportObjs)))
     outliers[, j] <- reportObjs %in% o
   }
 
