@@ -156,7 +156,7 @@ renameNodes <- function(doc, path, prefix) {
 ## The first column will contain the rownames of 'x', the second column will be empty
 ##---------------------------------------------------------------------------------------
 annotationTable <- function(x, name) {
-  bgcol <- rep(c("#d0d0ff", "#e0e0f0"), ceiling(ncol(x) / 2))[seq_len(ncol(x))]
+  bgcol <- rep_len(c("#d0d0ff", "#e0e0f0"), ncol(x))
   tab <- paste0(
     "<tr bgcolor='",
     bgcol,
