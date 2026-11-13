@@ -378,23 +378,6 @@ toggleEnd <- function() {
   "</div>"
 }
 
-##------------------------------------------------------------------
-## Create JSON representation of R character vectors and matrices
-## Names and dimnames attributes are stripped.
-##----------------------------------------------------------
-toJSON_fromchar <- function(x) {
-  paste("[", paste(x, collapse = ", "), "]")
-}
-
-toJSON_fromvector <- function(x) {
-  toJSON_fromchar(paste0('"', as.character(x), '"'))
-}
-
-toJSON_frommatrix <- function(x) {
-  stopifnot(length(dim(x)) == 2)
-  toJSON_fromchar(apply(x, 1, toJSON_fromvector))
-}
-
 ##--------------------------------------------------
 ##   write the report
 ##--------------------------------------------------
